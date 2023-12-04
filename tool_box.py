@@ -13,7 +13,7 @@ class PeakSearching():
     函数简介: 滑动窗口比较法
     参数1:wavelength            原始波长
     参数2:intensity             原始强度
-    参数3:find_wave             需要查找的峰对应的波长位置
+    参数3:find_wave             需要查找的峰对应的波长
     参数4:compare_points        窗口大小
     返回值1: return_wave        找到峰值对应的波长
     返回值2: return_intensity   在指定的波长位置通过滑动窗口找到的峰强
