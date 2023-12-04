@@ -1,14 +1,64 @@
 import os
 from natsort import natsorted
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import time
 from scipy import signal
-from pylab import *
+# from pylab import *
 from sklearn import preprocessing
 from scipy.signal import find_peaks
 from lxml import etree
+
+class PeakSearching():
+    '''
+    函数名: Sliding_Window
+    函数简介: 滑动窗口比较法
+    参数1:wavelength            原始波长
+    参数2:intensity             原始强度
+    参数3:find_wave             需要查找的峰对应的波长位置
+    参数4:compare_points        窗口大小
+    返回值1: return_wave        找到峰值对应的波长
+    返回值2: return_intensity   在指定的波长位置通过滑动窗口找到的峰强
+    '''
+    def Sliding_Window(wavelength,intensity,find_waves,compare_points):
+        peaks = []
+        for find_wave in find_waves:
+            # print(find_wave)
+            # 计算每个元素与目标值的绝对差, 找到最小差的索引
+            closest_index = np.argmin(np.abs(wavelength - find_wave))
+            # print(f'最小差值索引 = {closest_index}')
+            # 寻峰 x点比较
+            window = intensity[closest_index - compare_points : closest_index + compare_points]
+            max_window = max(window)
+            # print(f'window = {window}')
+            # print(f'max_window = {max_window}')
+            # 最接近的值
+            exc_inte = intensity[closest_index]
+            count = 0
+            while max(window) != exc_inte:
+                if count < 20 : # 限制滑动窗口的次数
+                    if max(window) > exc_inte:
+                        # print('window = ',window)
+                        for i in range(len(window)):
+                            if window[i] == max(window):
+                                closest_index = closest_index + i - compare_points
+                            exc_inte = intensity[closest_index] # 重新计算
+                    window = intensity[closest_index - compare_points : closest_index + compare_points]
+                    count = count + 1
+                else:
+                    break
+            peaks.append([wavelength[closest_index],intensity[closest_index]])
+        np_peaks = np.array(peaks).T
+        return np_peaks[0], np_peaks[1]
+            
+path = r'F:\BaiduSyncdisk\Project\20-木材分类\data\20231029木头\23\log213853327_Merge0.TXT'
+data = np.loadtxt(path,skiprows=2,delimiter=';').T
+wavelength = data[0]
+intensity = data[1]
+find_waves = [247.8,393.2,396.5]
+compare_points = 3
+
+waves, intens = PeakSearching.Sliding_Window(wavelength,intensity,find_waves,compare_points)
+print(waves, intens)
+
 
 
 # 导入数据
@@ -105,20 +155,3 @@ class Standardization():
         return MSC_intensitys
 
 
-# import numpy as np
-
-# # 假设你有原始光谱数据 X,每行代表一个样本,每列代表不同的波长
-# # 假设 X 是一个二维NumPy数组
-
-# # Step 1: 计算每个样本的均值
-# sample_means = np.mean(X, axis=1)  # 沿着每行计算均值
-
-# # Step 2: 计算全局均值光谱
-# global_mean_spectrum = np.mean(X, axis=0)  # 沿着每列计算均值
-
-# # Step 3: 进行MSC校正
-# X_msc = (X - sample_means[:, np.newaxis]) + global_mean_spectrum
-
-# # 现在,X_msc 包含了MSC校正后的光谱数据
-
-# # 可以继续使用 X_msc 进行进一步的数据分析或建模
