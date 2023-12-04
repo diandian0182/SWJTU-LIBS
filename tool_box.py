@@ -21,22 +21,16 @@ class PeakSearching():
     def Sliding_Window(wavelength,intensity,find_waves,compare_points):
         peaks = []
         for find_wave in find_waves:
-            # print(find_wave)
             # 计算每个元素与目标值的绝对差, 找到最小差的索引
             closest_index = np.argmin(np.abs(wavelength - find_wave))
-            # print(f'最小差值索引 = {closest_index}')
             # 寻峰 x点比较
             window = intensity[closest_index - compare_points : closest_index + compare_points]
-            max_window = max(window)
-            # print(f'window = {window}')
-            # print(f'max_window = {max_window}')
             # 最接近的值
             exc_inte = intensity[closest_index]
             count = 0
             while max(window) != exc_inte:
                 if count < 20 : # 限制滑动窗口的次数
                     if max(window) > exc_inte:
-                        # print('window = ',window)
                         for i in range(len(window)):
                             if window[i] == max(window):
                                 closest_index = closest_index + i - compare_points
@@ -48,19 +42,7 @@ class PeakSearching():
             peaks.append([wavelength[closest_index],intensity[closest_index]])
         np_peaks = np.array(peaks).T
         return np_peaks[0], np_peaks[1]
-            
-path = r'F:\BaiduSyncdisk\Project\20-木材分类\data\20231029木头\23\log213853327_Merge0.TXT'
-data = np.loadtxt(path,skiprows=2,delimiter=';').T
-wavelength = data[0]
-intensity = data[1]
-find_waves = [247.8,393.2,396.5]
-compare_points = 3
-
-waves, intens = PeakSearching.Sliding_Window(wavelength,intensity,find_waves,compare_points)
-print(waves, intens)
-
-
-
+        
 # 导入数据
 class DataImport():
     def NOVA_Raman(xml_path):
