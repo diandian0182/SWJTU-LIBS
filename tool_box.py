@@ -42,7 +42,46 @@ class PeakSearching():
             peaks.append([wavelength[closest_index],intensity[closest_index]])
         np_peaks = np.array(peaks).T
         return np_peaks[0], np_peaks[1]
-        
+
+    '''
+    函数名: Sliding_Window_all
+    函数简介: 滑动窗口比较法(总)
+    参数1:wavelength            一列原始波长
+    参数2:intensity             多列原始强度
+    参数3:find_wave             需要查找的峰对应的波长
+    参数4:compare_points        窗口大小
+    返回值: return_peaks        第一列为波长 后续为对应的多个峰强 具体波长由最后一列输入决定
+    '''        
+    def Sliding_Window_all(wavelength,intensity,find_waves,compare_points):
+        result_peaks = np.array([])
+        peaks = []
+        for find_wave in find_waves:
+            # 计算每个元素与目标值的绝对差, 找到最小差的索引
+            closest_index = np.argmin(np.abs(wavelength - find_wave))
+            columns = intensity.shape[1]
+            for column in range(columns):
+                each_intensity = intensity[column]
+                # 寻峰 x点比较
+                window = each_intensity[closest_index - compare_points : closest_index + compare_points]
+                # 最接近的值
+                exc_inte = each_intensity[closest_index]
+                count = 0
+                while max(window) != exc_inte:
+                    if count < 20 : # 限制滑动窗口的次数
+                        if max(window) > exc_inte:
+                            for i in range(len(window)):
+                                if window[i] == max(window):
+                                    closest_index = closest_index + i - compare_points
+                                exc_inte = each_intensity[closest_index] # 重新计算
+                        window = each_intensity[closest_index - compare_points : closest_index + compare_points]
+                        count = count + 1
+                    else:
+                        break
+                peaks.append(each_intensity[closest_index])
+            peaks.insert(0, wavelength[closest_index])
+            result_peaks = np.vstack([result_peaks, peaks]) if result_peaks.size else np.array([peaks])
+            peaks = []
+        return result_peaks
 # 导入数据
 class DataImport():
     def NOVA_Raman(xml_path):
@@ -135,5 +174,23 @@ class Standardization():
         # print(MSC_intensitys)
         MSC_intensitys = np.insert(MSC_intensitys.T, 0, label_row, axis=0) # 矩阵转置后在第一行插入标签
         return MSC_intensitys
+    
+class data_processing():
+    '''
+    函数名: mad_based_outlier
+    函数简介: 绝对中位差（根据阈值大小删除异常数据）
+    参数1:intens            一组一维numpy数据
+    参数2:thresh             阈值
+    返回值: 返回异常值的索引
+    '''       
+    def mad_based_outlier(intens, thresh=1.5): #这里设定的阈值1.5
+        if len(intens.shape) == 1:
+            intens = intens[:,None]
+        median = np.median(intens, axis=0)
+        diff = np.sum((intens - median)**2, axis=-1)
+        diff = np.sqrt(diff)
+        med_abs_deviation = np.median(diff)
 
+        modified_z_score = 0.6745 * diff / med_abs_deviation
 
+        return np.where(modified_z_score > thresh)[0]
