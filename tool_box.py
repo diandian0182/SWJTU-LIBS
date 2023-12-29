@@ -69,9 +69,6 @@ class DataImport():
             count +=1
         return data
 
-
-
-
 # 基线矫正
 class Baseline():
     # SNIP 基线校准
@@ -104,7 +101,10 @@ class Filter():
 # 标准化
 class Standardization():
     
-    def normalization(indentsity,rate): # 归一化
+    def normalization(indentsity,rate):
+        '''
+        归一化
+        '''
         min_intensity = np.min(indentsity)
         max_intensity = np.max(indentsity)
         return ((indentsity - min_intensity) / (max_intensity- min_intensity))*rate
